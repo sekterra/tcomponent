@@ -19,13 +19,14 @@
       :force-render-count="tableRenderCount"
       @forceRenderRequest="handleForceRenderRequest"
     />
-    tableRenderCount: {{tableRenderCount}}
-    formValue: {{formValue}}
+    <br>
+    <t-calendar></t-calendar>
   </div>
 </template>
 
 <script>
 import Vue from 'vue';
+import TCalendar from '../src/lib-components/TCalendar.vue';
 import TRadio from '../src/lib-components/TRadio.vue';
 import TSelect from '../src/lib-components/TSelect.vue';
 import TSwitch from '../src/lib-components/TSwitch.vue';
@@ -36,7 +37,8 @@ import cities from '../src/testData/city';
 import cityColumns from '../src/testData/cityColumns';
 
 export default Vue.extend({
-  components: { TSelect, TRadio, TSwitch, TTimePicker, TTransfer, _TComponentTemplate },
+  components: { TSelect, TRadio, TSwitch, TTimePicker, TTransfer, _TComponentTemplate ,
+    TCalendar},
   name: 'ServeDev',
   props: {
   },

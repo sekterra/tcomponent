@@ -9,6 +9,7 @@ import replace from '@rollup/plugin-replace';
 import babel from '@rollup/plugin-babel';
 import { terser } from 'rollup-plugin-terser';
 import minimist from 'minimist';
+import postcss from 'rollup-plugin-postcss'
 
 // Get browserslist config and remove ie from es build targets
 const esbrowserslist = fs.readFileSync('./.browserslistrc')
@@ -50,6 +51,27 @@ const baseConfig = {
     postVue: [
       resolve({
         extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
+      }),
+      // Process only `<style module>` blocks.
+      postcss({
+        modules: {
+          generateScopedName: '[local]___[hash:base64:5]',
+        },
+        include: /&module=.*\.s?css$/,
+        use: {
+          sass: {
+            data: `@import 'src/styles/abstract/mixins';`,
+          },
+        },
+      }),
+      // Process `<style>` blocks except css modules.
+      postcss({
+        include: /(?<!&module=.*)\.s?css$/,
+        use: {
+          sass: {
+            data: `@import 'src/styles/abstract/mixins';`,
+          },
+        },
       }),
       commonjs(),
     ],

@@ -3,17 +3,13 @@
 import Vue from 'vue';
 import * as components from '@/lib-components/index';
 import ElementUi from 'element-ui';
-// import koLocale from 'element-ui/lib/locale/lang/ko';
-// import enLocale from 'element-ui/lib/locale/lang/en';
-// import zhLocale from 'element-ui/lib/locale/lang/zh-CN';
-
 // TODO: 배포시 주석처리 할 것
-// import locale from 'element-ui/lib/locale/lang/ko'
+import locale from 'element-ui/lib/locale/lang/ko'
 
 /* css imports */
 // TODO: 배포시 주석처리 할 것
-// import 'element-ui/lib/theme-chalk/index.css';
-// import 'element-ui/lib/theme-chalk/display.css';
+import 'element-ui/lib/theme-chalk/index.css';
+import 'element-ui/lib/theme-chalk/display.css';
 
 /* import third party libraries  */
 // https://www.npmjs.com/package/@fortawesome/vue-fontawesome
@@ -47,7 +43,7 @@ const install = function installTComponents(Vue, options) {
   });
 
   // TODO: 배포시 주석 해제 할 것
-  Vue.use(ElementUi, options);
+  // Vue.use(ElementUi, options);
 };
 
 /** prototypes */
@@ -57,11 +53,11 @@ Vue.prototype.$uuid = uuidv4;
 /** /prototypes */
 
 // TODO: 배포시 주석처리 할 것
-// Vue.use(ElementUi, {
-//   size: 'mini', // set element-ui default size
-//   // i18n: (key, value) => i18n.t(key, value),
-//   locale,
-// });
+Vue.use(ElementUi, {
+  size: 'mini', // set element-ui default size
+  // i18n: (key, value) => i18n.t(key, value),
+  locale,
+});
 
 // Create module definition for Vue.use()
 export default install;
