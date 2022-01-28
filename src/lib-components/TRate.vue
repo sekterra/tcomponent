@@ -71,12 +71,18 @@ export default {
   },
   data () {
     return {
-      vValue: null
     };
   },
   watch: {
   },
   computed: {
+    vValue: {
+      get() {
+        return this.value
+      },
+      set(_value) {
+      }
+    },
     showText() {
       if (!this.texts) return false;
       return this.texts.length === this.max;
@@ -101,7 +107,6 @@ export default {
   methods: {
     /** 초기화 관련 함수 **/
     init () {
-      this.vValue = this.value;
     },
     /** /초기화 관련 함수 **/
     
@@ -114,8 +119,8 @@ export default {
     /** /Call API service **/
     
     /** events **/
-    handleChange() {
-      return this.$emit('input', this.vValue);
+    handleChange(_value) {
+      return this.$emit('change', _value);
     },
     /** /events **/
    

@@ -72,12 +72,18 @@ export default {
   },
   data () {
     return {
-      vValue: ''
     };
   },
   watch: {
   },
   computed: {
+    vValue: {
+      get() {
+        return this.value
+      },
+      set(_value) {
+      }
+    },
   },
   /** Vue lifecycle: created, mounted, destroyed, etc **/
   beforeCreate () {
@@ -98,7 +104,6 @@ export default {
   methods: {
     /** 초기화 관련 함수 **/
     init () {
-      this.vValue = this.value;
     },
     /** /초기화 관련 함수 **/
     
@@ -111,8 +116,8 @@ export default {
     /** /Call API service **/
     
     /** events */
-    handleChange() {
-      this.$emit("input", this.vValue);
+    handleChange(_value) {
+      this.$emit("change", _value);
     },
     /** /events */
 

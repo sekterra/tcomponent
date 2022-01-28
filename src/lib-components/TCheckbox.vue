@@ -4,22 +4,22 @@
   examples:
   -->
 <template>
-    <!-- 컴포넌트만 사용 -->
-    <el-checkbox-group
-      v-model="vValue"
-      :name="name"
-      :size="size"
-      :disabled="!editable"
-      :min="min"
-      :max="max"
-      @change="handleChange"
-    >
-      <el-checkbox v-for="item in options"
-        :key="item[valueKey]"
-        :label="item[valueKey]">
-        {{item[labelKey]}}
-      </el-checkbox>
-    </el-checkbox-group>
+  <el-checkbox-group
+    v-model="vValue"
+    :name="name"
+    :size="size"
+    :disabled="!editable"
+    :min="min"
+    :max="max"
+    @change="handleChange"
+  >
+    <el-checkbox
+      v-for="item in options"
+      :key="item[valueKey]"
+      :label="item[valueKey]">
+      {{item[labelKey]}}
+    </el-checkbox>
+  </el-checkbox-group>
 </template>
 
 <script>
@@ -54,7 +54,9 @@ export default {
     },
     value: {
       type: [Number, String, Object, Array],
-      default: [],
+      default: function(){
+        return []
+      },
     },
     /* /[common] properties */
 
@@ -101,7 +103,6 @@ export default {
   },
   data () {
     return {
-      vValue: [],
       isIndeterminate: false,
       checkAll: false,
     };
@@ -109,6 +110,21 @@ export default {
   watch: {
   },
   computed: {
+    vValue: {
+      get() {
+        if (!this.value) return ''
+        let values = this.value
+        if (this.returnType.toLowerCase() === 'object') {
+          this.$_.forEach(values, (_value, _index) => {
+            if (typeof _value === 'object') values[_index] = _value.value
+          })
+        }
+        return values
+      },
+      set(_value) {
+        this.$emit('change', _value)
+      }
+    },
   },
   /** Vue lifecycle: created, mounted, destroyed, etc **/
   beforeCreate () {
@@ -129,7 +145,6 @@ export default {
   methods: {
     /** 초기화 관련 함수 **/
     init () {
-      this.vValue = this.value;
       this.setIndeterminate(this.vValue);
     },
     /** /초기화 관련 함수 **/
@@ -144,21 +159,22 @@ export default {
     
     /** events **/
     handleChange(_value) {
+      console.log('checkbox handleChange')
       this.setIndeterminate(_value);
       
-      let value = this.getSelectedValue();
-      this.$emit('input', value);
+      let value = this.getSelectedValue(_value);
+      this.$emit('change', value);
     },
     handleCheckAllChange(_value) {
+      console.log('checkbox handleCheckAllChange')
       let value = [];
-      this.vValue = [];
       if (_value) value = this.getSelectedAllValue();
       this.isIndeterminate = false;
       if (this.returnType.toLowerCase() === "object") {
         this.$_.forEach(value, _item => {
-          if (_item) this.vValue.push(_item.value);
+          if (_item) value.push(_item.value);
         });
-      } else this.vValue = value;
+      }
 
       this.$emit('input', value);
     },
@@ -181,8 +197,9 @@ export default {
       }
       return null;
     },
-    getSelectedValue() {
-      let value = this.vValue;
+    getSelectedValue(_value) {
+      if (!_value) return _value
+      let value = _value;
       if (this.returnType.toLowerCase() === "object") {
         value = [];
         this.$_.forEach(this.vValue, _item => {
@@ -207,6 +224,7 @@ export default {
     },
     // check all의 일부 선택 사용 여부
     setIndeterminate(_value) {
+      if (!_value) return;
       let checkedCount = _value.length;
       this.checkAll = checkedCount === this.options.length;
       this.isIndeterminate = checkedCount > 0 && checkedCount < this.options.length;

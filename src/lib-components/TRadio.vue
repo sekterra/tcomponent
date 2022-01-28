@@ -10,7 +10,7 @@
     :disabled="!editable"
     :value-key="valueKey"
     :label-key="labelKey"
-    @change="change"
+    @change="handleChange"
     >
     <el-radio v-for="item in options"
       :key="item[valueKey]"
@@ -51,7 +51,7 @@ export default {
       default: false,
     },
     value: {
-      type: [Number, String],
+      type: [Number, String, Object],
       default: null,
     },
     /* /[common] properties */
@@ -84,12 +84,22 @@ export default {
   },
   data () {
     return {
-      vValue: ''
     };
   },
   watch: {
   },
   computed: {
+    vValue: {
+      get() {
+        if (!this.value) return this.value
+        let value = this.value
+        if (typeof value === 'object') value = this.value.value
+        return value
+      },
+      set(_value) {
+        this.$emit('change', _value)
+      }
+    },
   },
   /** Vue lifecycle: created, mounted, destroyed, etc **/
   beforeCreate () {
@@ -110,7 +120,6 @@ export default {
   methods: {
     /** 초기화 관련 함수 **/
     init () {
-      this.vValue = this.value;
     },
     /** /초기화 관련 함수 **/
     
@@ -123,11 +132,9 @@ export default {
     /** /Call API service **/
     
     /** events **/
-    change(_option) {
-      let value = this.vValue;
-      if (this.returnType.toLowerCase() === "object") {
-        value = this.getSelectedItem(this.vValue);
-      }
+    handleChange(_value) {
+      let value = _value;
+      if (this.returnType.toLowerCase() === "object") value = this.getSelectedItem(_value);
       this.$emit('change', value);
     },
     /** /events **/

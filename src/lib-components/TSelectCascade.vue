@@ -131,14 +131,42 @@ export default {
   },
   data () {
     return {
-      vValue: null,
       tooltipContent: '',
       uuid: this.$uuid(),
+      ref: null,
     };
   },
   watch: {
   },
   computed: {
+    vValue: {
+      get() {
+        if (!this.value) return this.value
+        let value = this.value
+        if (Array.isArray(value)) {
+          value = [];
+          if (this.multiple) {
+            this.$_.forEach(this.value, _value => {
+              if (typeof _value === 'object') value.push(_value[this.valueKey])
+              else value.push(_value)
+            })
+          } else {
+            if (typeof value[0] === 'object') value = this.value[0][this.valueKey]
+            else value = this.value[0]
+          }
+        } else {
+          if (typeof value === 'object') value = this.value[this.valueKey]
+          else value = this.value
+        }
+
+        if (this.ref) value = this.getSelectCascadeValue(value)
+
+        return value
+      },
+      set(_value) {
+        this.handleChange(_value);
+      }
+    },
     // 컴포넌트의 상세 설정
     properties() {
       let props = {
@@ -160,7 +188,8 @@ export default {
     this.init();
   },
   mounted () {
-    this.vValue = this.getSelectCascadeValue();
+    // this.vValue = this.getSelectCascadeValue();
+    this.ref = this.$refs[this.uuid]
     this.$nextTick(() => {
       this.setTooltipContent();
     });
@@ -186,17 +215,17 @@ export default {
     /** events **/
     handleChange(_value) {
       this.setTooltipContent();
-      let values = this.getReturnValues();
-      this.$emit('input', values);
+      let values = this.getReturnValues(_value);
+      this.$emit('change', values);
     },
     /** /events **/
    
     /** 기타 function **/
     // Tooltip 내용 만들기
     setTooltipContent() {
-      if (!this.$refs[this.uuid]) return;
+      if (!this.ref) return;
       let text = '';      
-      const nodes = this.$refs[this.uuid].getCheckedNodes();
+      const nodes = this.ref.getCheckedNodes();
       if (!(nodes.length > 1 && this.multiple)) {
         this.tooltipContent = "";
         return;
@@ -209,30 +238,40 @@ export default {
       this.tooltipContent = text;
     },
     // cascade 컴포넌트에 맞는 값 가져오기
-    getSelectCascadeValue() {
-      if (!this.$refs[this.uuid] && !this.value.length) return;
-      let values = [];
-      this.$_.forEach(this.value, _value => {
-        const node = this.$refs[this.uuid].panel.getNodeByValue(_value);
-        values.push(this.$_.map(node.pathNodes, 'data.id'));
-      });
-      return values;
+    getSelectCascadeValue(_item) {
+      if (!this.ref) return;
+      
+      let node = null
+      let returnValue = null
+      let self = this;
+      if (Array.isArray(_item)) {
+        returnValue = [];
+        this.$_.forEach(_item, _value => {
+          node = self.ref.panel.getNodeByValue(_value);
+          returnValue.push(this.$_.map(node.pathNodes, 'data.id'));
+        });
+      } else {
+        node = self.ref.panel.getNodeByValue(_item);
+        returnValue = this.$_.map(node.pathNodes, 'data.id')[0]
+      }
+      return returnValue;
     },
     // return 값을 return type에 맞게 변환
-    getReturnValues() {
+    getReturnValues(_items) {
       let values = [];
+      const items = _items ? _items : this.value
       if (this.returnType === "value") {
         if (this.multiple) {
-          this.$_.forEach(this.vValue, _value => {
+          this.$_.forEach(items, _value => {
             values.push(_value[_value.length - 1]);
           });
         }
-        else values = this.vValue[this.vValue.length - 1];
+        else values = items[items.length - 1];
       } else {
         let self = this;
         if (this.multiple) {
-          this.$_.forEach(this.vValue, _value => {
-            const node = this.$refs[this.uuid].panel.getNodeByValue(_value);
+          this.$_.forEach(items, _value => {
+            const node = self.ref.panel.getNodeByValue(_value);
             let data = {};
             for(var key in node.data) {
               if (key != self.childrenKey) data[key] = node.data[key];
@@ -240,7 +279,7 @@ export default {
             values.push(data);
           });
         } else {
-          const node = this.$refs[this.uuid].panel.getNodeByValue(this.vValue[this.vValue.length - 1]);
+          const node = this.ref.panel.getNodeByValue(items[items.length - 1]);
           let data = {};
           for(var key in node.data) {
             if (key != self.childrenKey) data[key] = node.data[key];

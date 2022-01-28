@@ -10,6 +10,7 @@ import locale from 'element-ui/lib/locale/lang/ko'
 // TODO: 배포시 주석처리 할 것
 import 'element-ui/lib/theme-chalk/index.css';
 import 'element-ui/lib/theme-chalk/display.css';
+/* css imports */
 
 /* import third party libraries  */
 // https://www.npmjs.com/package/@fortawesome/vue-fontawesome
@@ -19,6 +20,11 @@ import { faSearch, faFileExcel, faClipboardList } from '@fortawesome/free-solid-
 import lodash from 'lodash';
 import moment from 'moment';
 import { v4 as uuidv4 } from 'uuid';
+/* /import third party libraries  */
+
+/** import inner library */
+import * as utils from '@/utils/util'
+/** /import inner library */
 
 /* fontawesome settings */
 Vue.component('font-awesome-icon', FontAwesomeIcon)
@@ -50,6 +56,7 @@ const install = function installTComponents(Vue, options) {
 Vue.prototype.$_ = lodash;
 Vue.prototype.$moment = moment;
 Vue.prototype.$uuid = uuidv4;
+Vue.prototype.$util = utils;
 /** /prototypes */
 
 // TODO: 배포시 주석처리 할 것

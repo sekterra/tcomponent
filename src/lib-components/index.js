@@ -15,6 +15,7 @@ export { default as TSelectCascade } from './TSelectCascade.vue';
 export { default as TTable } from './TTable.vue'
 export { default as TTableColumn } from './TTableColumn.vue'
 export { default as TCalendar } from './TCalendar.vue'
+export { default as TDialog } from './TDialog.vue'
 
 export { default as TFormTemplate } from './TFormTemplate.vue';
 

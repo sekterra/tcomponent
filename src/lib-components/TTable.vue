@@ -238,10 +238,6 @@ export default {
     };
   },
   watch: {
-    // columnOptions(_new, _old) {
-    //   console.log("columnOption changed:" + JSON.stringify(_old))
-    //   console.log("to:" + JSON.stringify(_new))
-    // }
   },
   computed: {
     pagedTableData() {
@@ -301,7 +297,6 @@ export default {
       import('@/vendor/Export2Excel').then(excel => {
         const tHeader = this.$_.map(this.columnOptions, 'label')
         const filterVal = this.$_.map(this.columnOptions, 'valueKey')
-        console.log(JSON.stringify(this.columnOptions))
         const list = this.tableData
         const data = this.formatJson(filterVal, list)
         excel.export_json_to_excel({

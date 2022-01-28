@@ -7,9 +7,9 @@
   <div>
     <el-input
       v-if="filterable"
+      v-model="keyword"
       :placeholder="placeholder"
       :size="size"
-      v-model="keyword"
       :clearable="true"
       class="keyword"
     />
@@ -24,7 +24,7 @@
       :draggable="getDraggable"
       :filter-node-method="filterMethod"
       :check-on-click-node="true"
-      @check="handleCheck"
+      @check="handleChange"
     />
   </div>
 </template>
@@ -139,7 +139,6 @@ export default {
   },
   data () {
     return {
-      vValue: [],
       keyword: '',
       uuid: this.$uuid()
     };
@@ -148,8 +147,8 @@ export default {
     keyword(_keyword) {
       this.$refs[this.uuid].filter(_keyword);
     },
-    vValue() {
-      this.setCheckedKeys();
+    value(_value) {
+      if (!_value.length) this.resetChecked()
     }
   },
   computed: {
@@ -185,7 +184,6 @@ export default {
   methods: {
     /** 초기화 관련 함수 **/
     init () {
-      this.vValue = this.value;
     },
     /** /초기화 관련 함수 **/
     
@@ -198,10 +196,11 @@ export default {
     /** /Call API service **/
     
     /** events **/
-    handleCheck() {
-      if (this.returnType === 'value') this.vValue = this.getCheckedKeys();
-      else this.vValue = this.getCheckedNodes();
-      this.$emit('input', this.vValue);
+    handleChange(_value) {
+      let value = null
+      if (this.returnType === 'value') value = this.getCheckedKeys();
+      else value = this.getCheckedNodes();
+      this.$emit('change', value);
     },
     /** /events **/
    
@@ -219,12 +218,12 @@ export default {
       return this.$refs[this.uuid].getCheckedKeys();
     },
     // key로 체크하기
-    setCheckedKeys() {
-      this.$refs[this.uuid].setCheckedKeys(this.vValue);
+    setCheckedKeys(_value) {
+      if (!_value) return;
+      this.$refs[this.uuid].setCheckedKeys(_value);
     },
     // 선택값 초기화
     resetChecked() {
-      console.log("resetChecked")
       this.$refs[this.uuid].setCheckedKeys([]);
     },
     /** /기타 function **/

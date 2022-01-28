@@ -17,8 +17,7 @@ examples:
     :show-word-limit="showLimit"
     :autofocus="autofocus"
     :clearable="clearable"
-    @input="input"
-    @change="change"
+    @change="handleChange"
   />
 </template>
 
@@ -109,29 +108,16 @@ export default {
   },
   data() {
     return {
-      vValue: '',
     };
   },
   computed: {
-    inputLength() {
-      if (!this.vValue) return 0;
-      else
-        return this.limitAsByte ? byteLength(this.vValue) : this.vValue.length;
-    },
-    inputInfo() {
-      var length = '';
-      if (this.vValue)
-        length =
-          this.inputLength + ' / ' + this.maxlength + ' ' + this.limitText;
-      else length = '0 / ' + this.maxlength + ' ' + this.limitText;
-      return length;
-    },
-    truncValue() {
-      var truncStr = this.vValue;
-      if (this.maxlength && byteLength(truncStr) > this.maxlength) {
-        truncStr = truncateUtf8Bytes(truncStr, this.maxlength);
+    vValue: {
+      get() {
+        return this.value
+      },
+      set(_value) {
+        this.$emit('input', _value)
       }
-      return truncStr;
     },
   },
   watch: {
@@ -153,29 +139,22 @@ export default {
   /* methods */
   methods: {
     init() {
-      this.vValue = this.getValue(this.value);
     },
     getValue(_value) {
       if (!_value) return _value;
-      let value = _value.toString().replace(/[^0-9.]/, '');
+      let value = _value.toString().replace(/[^-\.0-9]/g, '');
       if(this.numberFormat) value = numeral(value).format(this.numberFormat);
+
+      // 1.0과 같이 소수점 이하 값이 0일 경우 소수점 없앰
+      let numberArr = value.split('.');
+      if (numberArr.length > 1) {
+        const pointNumber = '0.' + numberArr[1]
+        if (numeral(pointNumber).value() <= 0) value = numberArr[0]
+      }
+
       return value;
     },
-    input() {
-      // var truncStr = this.value;
-      // if (this.maxlength && byteLength(truncStr) > this.maxlength) {
-      //   truncStr = truncateUtf8Bytes(truncStr, this.maxlength);
-      //   // this.vValue = truncStr;
-      // }
-
-      //var value = this.limitAsByte ? this.truncValue : this.vValue;
-      // TODO : 부모에게 변경여부 전달
-
-      console.log('::: input number emit')
-      // this.vValue = this.getValue(this.vValue);
-      this.$emit('input', this.vValue);
-    },
-    change() {
+    handleChange() {
       this.vValue = this.getValue(this.vValue);
       this.$emit('change', this.vValue);
     },

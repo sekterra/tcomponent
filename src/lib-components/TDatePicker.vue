@@ -20,7 +20,6 @@
         :disabled="!editable"
         :editable="textInputtable"
         :align="align"
-        @change="handleChange"
       />
     </div>
     <div class="hidden-sm-and-up">
@@ -40,7 +39,7 @@
         :picker-options="fromPickerOptions"
         @change="handleChangeFromDate"
       />
-      <el-date-picker
+      <el-date-picker v-if="isRange"
         v-model="toDate"
         :size="size"
         :type="type"
@@ -126,7 +125,6 @@ export default {
   },
   data () {
     return {
-      vValue: '',
       fromDate: '',
       toDate: '',
     };
@@ -134,6 +132,20 @@ export default {
   watch: {
   },
   computed: {
+    vValue: {
+      get() {
+        if (!this.value) return this.value
+        if (Array.isArray(this.value)) {
+          this.fromDate = this.value[0]
+          this.toDate = this.value.length > 1 ? this.value[1] : null
+          if (!this.isRange) return this.value[0]
+        }
+        return this.value
+      },
+      set(_value) {
+        this.handleChange(_value)
+      }
+    },
     // datepicker 타입
     pickerType () {
       if (!this.isRange || this.type.toLowerCase() === "year") return this.type.toLowerCase();
@@ -215,8 +227,6 @@ export default {
   methods: {
     /** 초기화 관련 함수 **/
     init () {
-      this.vValue = this.value;
-      this.setDateValue();
     },
     /** /초기화 관련 함수 **/
     
@@ -229,24 +239,24 @@ export default {
     /** /Call API service **/
     
     /** events **/
-    handleChange() {
-      this.setDateValue();
-      this.$emit("input", this.vValue);
+    handleChange(_value) {
+      this.$emit("change", _value);
     },
-    handleChangeFromDate() {
+    handleChangeFromDate(_value) {
+      if (!this.isRange) return this.$emit("change", _value);
       if (!this.fromDate) this.toDate = '';
       if (!this.fromDate || !this.toDate) return;
-      this.vValue = [];
-      this.vValue.push(this.fromDate);
-      this.vValue.push(this.toDate);
-      this.$emit("input", this.vValue);
+      let dates = [];
+      dates.push(this.fromDate);
+      dates.push(this.toDate);
+      this.$emit("change", dates);
     },
     handleChangeToDate() {
       if (!this.fromDate || !this.toDate) return;
-      this.vValue = [];
-      this.vValue.push(this.fromDate);
-      this.vValue.push(this.toDate);
-      this.$emit("input", this.vValue);
+      let dates = [];
+      dates.push(this.fromDate);
+      dates.push(this.toDate);
+      this.$emit("change", dates);
     },
     /** /events **/
    

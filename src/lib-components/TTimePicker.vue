@@ -10,14 +10,14 @@
       v-model="fromTime"
       :size="size"
       :picker-options="pickerOption"
-      @change="handleChange"
+      @change="handleFromChange"
     />
     <el-time-select v-if="isRange"
       :placeholder="placeholder"
       v-model="toTime"
       :size="size"
       :picker-options="endPickerOption"
-      @change="handleChange"
+      @change="handleToChange"
     /> 
   </div>
 </template>
@@ -86,18 +86,29 @@ export default {
   },
   data () {
     return {
-      vValue: '',
-      fromTime: '',
       toTime: '',
     };
   },
   watch: {
   },
   computed: {
+    fromTime: {
+      get() {
+        if (!this.value) return this.value
+        if (Array.isArray(this.value)) {
+          // times = this.getCorrectTimeRange()
+          this.toTime = this.value[1];
+          return this.value[0];
+        }
+        return this.value
+      },
+      set(_value) {
+        this.handleFromChange(_value);
+      }
+    },
     pickerOption() {
       let step = this.step;
       step = this.$moment('00'+step, 'hmm').format('HH:mm');
-
       return {
         start: this.from,
         step: step,
@@ -135,8 +146,6 @@ export default {
   methods: {
     /** 초기화 관련 함수 **/
     init () {
-      this.vValue = this.value;
-      this.setTimeValue();
     },
     /** /초기화 관련 함수 **/
     
@@ -149,46 +158,45 @@ export default {
     /** /Call API service **/
     
     /** events **/
-    handleChange() {
-      let value = this.vValue;
+    handleFromChange(_value) {
+      let value = _value;
       if (this.isRange) {
-        if (this.fromTime && this.toTime) {
-          value = [];
-          value.push(this.fromTime);
-          value.push(this.toTime);
-        } else value = null;
-      } else {
-        value = this.fromTime ? this.fromTime : null;
+        value = []
+        value.push(_value)
+        value.push(this.toTime)
       }
-
-      this.vValue = value;
-      return this.$emit('input', this.vValue);
+      this.$emit('change', value);
+    },
+    handleToChange(_value) {
+      let values = [];
+      values.push(this.fromTime)
+      values.push(_value)
+      this.$emit('change', values)
     },
     /** /events **/
    
     /** 기타 function **/
-    setTimeValue() {
-      if (Array.isArray(this.vValue)) {
-        if (this.vValue.length == 1) this.fromTime = this.vValue[0] ? this.vValue[0] : null
-        if (this.vValue.length > 1) {
-          let fromTime = this.vValue[0] ? this.vValue[0] : null;
-          let toTime = this.vValue[1] ? this.vValue[1] : null;
-          let difference = 0;
-          if (fromTime && toTime) {
-            difference = this.$moment(toTime, 'hh:mm').diff(this.$moment(fromTime, 'hh:mm'), 'minutes');
-            if (difference >= 0) {
-              this.fromTime = fromTime;
-              this.toTime = toTime;
-            } else {
-              this.fromTime = toTime;
-              this.toTime = fromTime;
-            }
-          } else {
-            this.fromTime = fromTime;
-            this.toTime = toTime;
-          }
-        }
-      } else if (typeof this.vValue === 'string' ) this.fromTime = this.vValue;
+    getCorrectTimeRange() {
+      // if (!this.isRange) this.value;
+      // let value  = [];
+      // if (Array.isArray(this.value)) {
+      //   let fromTime = this.value[0] ? this.value[0] : null;
+      //   let toTime = null;
+      //   if (this.value.length > 1) toTime = this.value[1]
+      //   if (fromTime && toTime) {
+      //     if (this.$moment(toTime, 'hh:mm').diff(this.$moment(fromTime, 'hh:mm'), 'minutes') >= 0) {
+      //       value.push(fromTime)
+      //       value.push(toTime)
+      //     } else {
+      //       value.push(toTime)
+      //       value.push(fromTime)
+      //     }
+      //   } else {
+      //     value.push(fromTime)
+      //     value.push(toTime)
+      //   }
+      // } else return []
+      // return value
     },
     /** /기타 function **/
   }

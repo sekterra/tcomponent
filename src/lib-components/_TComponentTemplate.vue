@@ -48,7 +48,7 @@ export default {
   },
   data () {
     return {
-      vValue: ''
+      vValue: '',
     };
   },
   watch: {
@@ -78,18 +78,19 @@ export default {
     /** /초기화 관련 함수 **/
     
     /** Call API service
-    * Naming Rule: get, post, put 등의 RESTFul verb를 접두사로 사용하고 그 뒤에 관련 모델명을 Camel case로 추가하세요.
+    * Naming Rule: api + [Get, Post, Put] 등의 RESTFul verb를 접두사로 사용하고 그 뒤에 관련 모델명을 Camel case로 추가하세요.
     * Naming Rule: get의 경우 복수의 데이터조회(리스트 데이터 등)시에는 복수를 나타내는 접미사 "s"를 붙여주세요.
     * ex) getExamData () {}
     * ex) getExamDatas () {}
     */   
+    /** /Call API service **/ 
     /** /Call API service **/
     
-    /** events **/
-    /** /events **/
-   
     /** 기타 function **/
     /** /기타 function **/
+
+    /** events **/
+    /** /events **/
   }
 };
 </script>

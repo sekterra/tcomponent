@@ -13,9 +13,10 @@
     :size="size"
     :direction="columnLabelDirection"
     :border="showBorder">
+
     <template slot="extra">
-      <el-button type="primary" size="mini" round @click="handleClick">저장</el-button>
     </template>
+
     <el-descriptions-item v-for="_option in eachItemOptions"
       :key="_option.key"
       :span="_option.span"
@@ -35,6 +36,7 @@
         :clearable="_option.clearable"
         :required="_option.required"
         :placeholder="_option.placeholder"
+        @change="handleChange"
       />
       
       <!-- number component -->
@@ -45,6 +47,8 @@
         :clearable="_option.clearable"
         :required="_option.required"
         :placeholder="_option.placeholder"
+        :number-format="_option.numberFormat"
+        @change="handleChange"
       />
 
       <!-- select component -->
@@ -60,6 +64,7 @@
         :returnType="_option.returnType"
         :multiple="_option.multiple"
         :multipleLimit="_option.multipleLimit"
+        @change="_value => handleChange(_value, _option.key)"
       />
 
       <!-- radio component -->
@@ -72,6 +77,7 @@
         :value-key="_option.valueKey"
         :label-key="_option.labelKey"
         :returnType="_option.returnType"
+        @change="_value => handleChange(_value, _option.key)"
       />
 
       <!-- checkbox component -->
@@ -84,6 +90,7 @@
         :value-key="_option.valueKey"
         :label-key="_option.labelKey"
         :returnType="_option.returnType"
+        @change="_value => handleChange(_value, _option.key)"
       />
 
       <!-- switch component -->
@@ -92,6 +99,7 @@
         :editable="_option.editable"
         :size="size"
         :required="_option.required"
+        @change="_value => handleChange(_value, _option.key)"
       />
 
       <!-- time component -->
@@ -103,6 +111,7 @@
         :placeholder="_option.placeholder"
         :isRange="_option.isRange"
         :step="_option.step"
+        @change="_value => handleChange(_value, _option.key)"
       />
 
       <!-- date component -->
@@ -113,6 +122,7 @@
         :required="_option.required"
         :placeholder="_option.placeholder"
         :isRange="_option.isRange"
+        @change="_value => handleChange(_value, _option.key)"
       />
 
       <!-- rate component -->
@@ -121,6 +131,7 @@
         :editable="_option.editable"
         :size="size"
         :max="_option.max"
+        @change="_value => handleChange(_value, _option.key)"
       />
 
       <!-- tree component -->
@@ -135,11 +146,9 @@
         :expandAll="_option.expandAll"
         :draggable="_option.draggable"
         :defaultProps="_option.defaultProps"
+        @change="_value => handleChange(_value, _option.key)"
       />
-      <div v-if="_option.type.toLowerCase() === 'tree'">
-        tree:{{vValue[_option.key]}}
-      </div>
-      
+     
       <t-select-cascade v-if="_option.type.toLowerCase() === 'selectcascade'"
         v-model="vValue[_option.key]"
         :editable="_option.editable"
@@ -150,6 +159,7 @@
         :label-key="_option.labelKey"
         :multiple="_option.multiple"
         :returnType="_option.returnType"
+        @change="_value => handleChange(_value, _option.key)"
       />
     </el-descriptions-item>
   </el-descriptions>
@@ -180,14 +190,11 @@ export default {
       type: Boolean,
       default: true,
     },
-    // 필수 입력 여부
-    required: {
-      type: Boolean,
-      default: false,
-    },
     value: {
       type: Object,
-      default: null,
+      default: function() {
+        return {};
+      },
     },
     /* /[common] properties */
 
@@ -226,19 +233,37 @@ export default {
     // 컬럼별 옵션
     options: {
       type: Array,
-      default: []
+      default: function() {
+        return [];
+      }
     },
     /* /[component] properties */
   },
   data () {
     return {
-      vValue: {},
+      formValue: {},
       eachItemOptions: []
     };
   },
   watch: {
+    // value() {
+    //   this.vValue = this.value
+    // }
   },
   computed: {
+    vValue: {
+      get() {
+        console.log('::: form getter ::: ' + JSON.stringify(this.value))
+        if (this.value) {
+          for (var key in this.formValue) {
+            if (this.value[key]) this.formValue[key] = this.value[key]
+          }
+        }
+        return this.formValue
+      },
+      set(_value) {
+      }
+    }
   },
   /** Vue lifecycle: created, mounted, destroyed, etc **/
   beforeCreate () {
@@ -246,9 +271,9 @@ export default {
   created () {
   },
   beforeMount () {
+    this.init();
   },
   mounted () {
-    this.init();
   },
   beforeDestory () {
     this.init();
@@ -257,8 +282,8 @@ export default {
   methods: {
     /** 초기화 관련 함수 **/
     init () {
-      this.eachItemOptions = this.setOptionsWithDefault();
-      this.vValue = this.value;
+      this.eachItemOptions = this.setOptionsWithDefault()
+      // this.vValue = this.value ? this.value : {}
     },
     /** /초기화 관련 함수 **/
     
@@ -271,22 +296,27 @@ export default {
     /** /Call API service **/
     
     /** events **/
-    handleClick() {
-      this.$emit('input', this.vValue);
+    handleChange(_value, _key) {
+      if (_key) this.vValue[_key] = _value
+      this.$emit('change', this.vValue)
     },
     /** /events **/
    
     /** 기타 function **/
     // 부모에서 받은 옵션 값을 컴포넌트에 맞게 설정하는 함수(관련 옵션이 없으면 컴포넌트의 기본값으로 설정)
     setOptionsWithDefault() {
+      const self = this
       let options = this.$_.cloneDeep(this.options);
+      let value = {}
       this.$_.forEach(options, _option => {
         if (!_option.key) throw this.$message.error("key 값이 존재하지 않습니다.");
         if (!_option.type) throw this.$message.error("컴포넌트 type이 존재하지 않습니다.");
-
         _option.editable = _option.editable ? _option.editable : this.editable;
         _option.required = _option.required ? _option.required : false;
         _option.span = _option.span ? _option.span : 0;
+
+        value[_option.key] = null
+
         if (_option.type.toLowerCase() === 'text') {
           _option.clearable = _option.clearable ? _option.clearable : true;
           _option.placeholder = _option.placeholder ? _option.placeholder : "입력하세요";
@@ -340,8 +370,9 @@ export default {
           _option.multiple = _option.multiple ? _option.multiple : false;
         }
       });
+      this.$set(this, 'formValue', value);
       return options;
-    }
+    },
     /** /기타 function **/
   }
 };

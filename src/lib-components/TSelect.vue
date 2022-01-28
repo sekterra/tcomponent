@@ -11,13 +11,14 @@
     :multiple="multiple"
     :multiple-limit="multipleLimit"
     :disabled="!editable"
+    :clearable="clearable"
     :value-key="valueKey"
     :label-key="labelKey"
     :filterable="filterable"
     :no-match-text="noMatchText"
     :default-first-option="defaultFirstOption"
     :placeholder="placeholder"
-    @change="change"
+    @change="handleChange"
     >
     <el-option
       v-for="item in options"
@@ -59,7 +60,7 @@ export default {
       default: false,
     },
     value: {
-      type: [Number, String, Array],
+      type: [Number, String, Array, Object],
       default: null,
     },
     /* /[common] properties */
@@ -125,12 +126,35 @@ export default {
   },
   data () {
     return {
-      vValue: ''
     };
   },
   watch: {
   },
   computed: {
+    vValue: {
+      get() {
+        if (!this.value) return this.value
+        let value = this.value
+        if (Array.isArray(value)) {
+          value = [];
+          if (this.multiple) {
+            this.$_.forEach(this.value, _value => {
+              if (this.returnType.toLowerCase() === 'object' && typeof _value === 'object') value.push(_value.value)
+              else value.push(_value)
+            })
+          } else {
+            if (this.returnType.toLowerCase() === 'object' && typeof _value === 'object') value = this.value[0].value
+            else value = this.value[0]
+          }
+        } else {
+          if (this.returnType.toLowerCase() === 'object' && typeof _value === 'object') value = this.value.value
+            else value = this.value
+        }
+        return value
+      },
+      set(_value) {
+      }
+    },
   },
   /** Vue lifecycle: created, mounted, destroyed, etc **/
   beforeCreate () {
@@ -151,7 +175,6 @@ export default {
   methods: {
     /** 초기화 관련 함수 **/
     init () {
-      this.vValue = this.value;
     },
     /** /초기화 관련 함수 **/
     
@@ -164,18 +187,18 @@ export default {
     /** /Call API service **/
     
     /** events **/
-    change(_option) {
-      let value = this.vValue;
+    handleChange(_value) {
+      let value = _value;
       if (this.returnType.toLowerCase() === "object") {
         if (this.multiple) {
           value = [];
-          this.$_.forEach(this.vValue, _item => {
+          this.$_.forEach(_value, _item => {
             if (_item) value.push(this.getSelectedItem(_item));
           });
         }
-        else value = this.getSelectedItem(this.vValue);
+        else value = this.getSelectedItem(_value);
       }
-      this.$emit('input', value);
+      this.$emit('change', value);
     },
     /** /events **/
 

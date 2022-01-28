@@ -4,11 +4,14 @@
       v-model="formValue"
       label="검색"
       size="medium"
-      :editable="true"
+      :editable="editable"
       type="search"
       :column-count="columnCount"
       :options="getFormOptions()"
     />
+    <el-button @click="handleClear">
+      초기화
+    </el-button>
     <br>
     <t-table
       v-model="tableValue"
@@ -20,13 +23,27 @@
       @forceRenderRequest="handleForceRenderRequest"
     />
     <br>
-    <t-calendar></t-calendar>
+    <div v-if="treeOptions.length">
+      <el-button @click="showDialog = !showDialog">
+        팝업 표시
+      </el-button>
+      <t-dialog
+        label="검색"
+        v-model="dialog.dialogValue"
+        :show-dialog.sync="showDialog"
+        :size="size"
+        :editable="editable"
+        :form-options="dialog.dialogFormOptions"
+      >
+      </t-dialog>
+    </div>
   </div>
 </template>
 
 <script>
 import Vue from 'vue';
 import TCalendar from '../src/lib-components/TCalendar.vue';
+import TDialog from '../src/lib-components/TDialog.vue';
 import TRadio from '../src/lib-components/TRadio.vue';
 import TSelect from '../src/lib-components/TSelect.vue';
 import TSwitch from '../src/lib-components/TSwitch.vue';
@@ -38,12 +55,15 @@ import cityColumns from '../src/testData/cityColumns';
 
 export default Vue.extend({
   components: { TSelect, TRadio, TSwitch, TTimePicker, TTransfer, _TComponentTemplate ,
-    TCalendar},
+    TCalendar,
+    TDialog},
   name: 'ServeDev',
   props: {
   },
   data() {
     return {
+      size: 'medium',
+      editable: true,
       textValue: '',
       textNumber: '',
       options: [],
@@ -62,7 +82,17 @@ export default Vue.extend({
       treeOptions: [],
       columnCount: 4,
       formOptions: [],
-      formValue: {},
+      formValue: {
+        text: null,
+        number: null,
+        select: null,
+        radio: null,
+        selectcascade: [],
+        tree: [],
+        checkbox: [],
+        switchValue: null,
+        // rate: 0
+      },
       selectCascadeOptions: [],
       columnOptions: cityColumns,
       tableOptions: {
@@ -76,6 +106,11 @@ export default Vue.extend({
       tableValue: {id: 1},
       tableSpanOptions: [],
       tableRenderCount: 0,
+      showDialog: false,
+      dialog: {
+        dialogValue: {},
+        dialogFormOptions: {},
+      }
     };
   },
   computed: {
@@ -113,22 +148,23 @@ export default Vue.extend({
     init() {
       this.handleResize();
       this.getData();
-      this.getFormOptions();
-      this.formValue = {text: "테스트",
+      this.formValue = {
+        text: "테스트",
         number: 123,
-        select: 1,
-        selectcascade: [1,111,2,21],
+        select: [1],
+        selectcascade: 1,
+        radio: 1,
+        tree: [1],
+        checkbox: [1],
+        switch: null,
+        timepicker: ["00:30", "00:20"],
+        datepicker: ['2020-01-27', '2020-01-29'],
+        // rate: 0
       };
-      // this.tableSpanOptions = [
-      //   {
-      //     index: 2,      // row span 하려는 컬럼의 index 번호
-      //     field: "city", // 해당 컬럼의 속성명
-      //   },
-      //   {
-      //     index: 3, 
-      //     field: "state",
-      //   },
-      // ]
+      this.dialog.dialogFormOptions = {
+          label: 'test',
+          options: this.getFormOptions(),
+      };
     },
     handleResize() {
       this.columnCount = this.getRelativeColumnCount();
@@ -140,6 +176,16 @@ export default Vue.extend({
       this.$nextTick(() => {
         this.columnOptions = _tableChangeInfo.columnOptions;
         this.tableData = _tableChangeInfo.tableData;
+      })
+    },
+    handleClear() {
+      this.formValue = null;
+      this.formValue = Object.assign({}, this.$data.formValue, {
+        text: '',
+        number: null,
+        select: null,
+        selectcascade: [],
+        tree: []
       })
     },
     //TODO: 화면 크기별 컬럼 개수를 가져옴
@@ -167,6 +213,7 @@ export default Vue.extend({
       options.push({
         key: 'number',
         type: 'number',
+        numberFormat: '0,0.0',
         label: '숫자',
       });
       options.push({
@@ -176,6 +223,8 @@ export default Vue.extend({
         options: this.options,
         valueKey: "id",
         labelKey: "name",
+        returnType: 'value',
+        multiple: false,
       });
       options.push({
         key: 'selectcascade',
@@ -184,17 +233,48 @@ export default Vue.extend({
         options: this.selectCascadeOptions,
         valueKey: "id",
         labelKey: "name",
-        returnType: "object",
+        returnType: "value",
         multiple: true,
       });
       options.push({
-        key: 'selectcascade2',
-        type: 'selectcascade',
-        label: '종속적 선택2',
-        options: this.selectCascadeOptions,
+        key: 'radio',
+        type: 'radio',
+        label: 'radio',
+        options: this.options,
         valueKey: "id",
         labelKey: "name",
-        multiple: true,
+        returnType: "object"
+      });
+      options.push({
+        key: 'checkbox',
+        type: 'checkbox',
+        label: 'checkbox',
+        options: this.options,
+        valueKey: "id",
+        labelKey: "name",
+        returnType: "object"
+      });
+      options.push({
+        key: 'timepicker',
+        type: 'timepicker',
+        label: 'timepicker',
+        isRange: true,
+      });
+      options.push({
+        key: 'datepicker',
+        type: 'datepicker',
+        label: 'datepicker',
+        isRange: true,
+      });
+      options.push({
+        key: 'switch',
+        type: 'switch',
+        label: 'switch',
+      });
+      options.push({
+        key: 'rate',
+        type: 'rate',
+        label: 'rate',
       });
       options.push({
         key: 'tree',
@@ -208,178 +288,175 @@ export default Vue.extend({
       return options;
     },
     getData() {
-      this.selectValue = [1, 2];
+      this.selectValue = null;
       this.radioValue = 2;
       this.checkValue = [3];
       this.timeValue = ['23:15', '23:10'];
       this.dateValue = ['2022-01-28'];
       this.treeValue = [11, 12];
-      setTimeout(() => {
-        this.textValue = 'test';
-        this.textNumber = 1000;     
-        this.options = [
-          {
-            id: 1,
-            name: "서울",
-            order: 1
-          },
-          {
-            id: 2,
-            name: "부산",
-            order: 2
-          },
-          {
-            id: 3,
-            name: "대구",
-            order: 3
-          },
-        ];
-        this.radioOptions = [
-          {
-            id: 1,
-            name: "서울",
-            order: 1
-          },
-          {
-            id: 2,
-            name: "부산",
-            order: 2
-          },
-          {
-            id: 3,
-            name: "대구",
-            order: 3
-          },
-        ];
-        this.checkOptions = [
-          {
-            id: 1,
-            name: "서울",
-            order: 1
-          },
-          {
-            id: 2,
-            name: "부산",
-            order: 2
-          },
-          {
-            id: 3,
-            name: "대구",
-            order: 3
-          },
-        ];
-        this.transferOptions = [
-          {
-            id: 1,
-            name: "서울",
-            order: 1
-          },
-          {
-            id: 2,
-            name: "부산",
-            order: 2
-          },
-          {
-            id: 3,
-            name: "대구",
-            order: 3
-          },
-          {
-            id: 4,
-            name: "인천",
-            order: 1
-          },
-          {
-            id: 5,
-            name: "고양",
-            order: 2
-          },
-          {
-            id: 6,
-            name: "광주",
-            order: 3
-          },
-          {
-            id: 7,
-            name: "경기도",
-            order: 1
-          },
-          {
-            id: 8,
-            name: "충청도",
-            order: 2
-          },
-          {
-            id: 9,
-            name: "경상도",
-            order: 3
-          },
-        ]
-      }, 1000);
 
-      setTimeout(() => {
-        this.treeOptions = [
-          {
-            id: 1,
-            name: "서울",
-            order: 1,
-            children: [
-              {
-                id: 11,
-                name: "강서구",
-                order: 1,
-                children: [
-                  {
-                    id: 111,
-                    name: "화곡동",
-                    order: 1,
-                  }
-                ]
-              },
-              {
-                id: 12,
-                name: "강남구",
-                order: 1,
-              }
-            ]
-          },
-          {
-            id: 2,
-            name: "부산",
-            order: 2,
-            children: [
-              {
-                id: 21,
-                name: "중구",
-                order: 1,
-              },
-              {
-                id: 22,
-                name: "연제구",
-                order: 1,
-              }
-            ]
-          },
-          {
-            id: 3,
-            name: "대구",
-            order: 3,
-            children: [
-              {
-                id: 31,
-                name: "서구",
-                order: 1,
-              },
-              {
-                id: 32,
-                name: "중구",
-                order: 1,
-              }
-            ]
-          },
-        ];
-        this.selectCascadeOptions = this.$_.cloneDeep(this.treeOptions);
-      }, 2000);
+      this.textValue = 'test';
+      this.textNumber = 1000;     
+      this.options = [
+        {
+          id: 1,
+          name: "서울",
+          order: 1
+        },
+        {
+          id: 2,
+          name: "부산",
+          order: 2
+        },
+        {
+          id: 3,
+          name: "대구",
+          order: 3
+        },
+      ];
+      this.radioOptions = [
+        {
+          id: 1,
+          name: "서울",
+          order: 1
+        },
+        {
+          id: 2,
+          name: "부산",
+          order: 2
+        },
+        {
+          id: 3,
+          name: "대구",
+          order: 3
+        },
+      ];
+      this.checkOptions = [
+        {
+          id: 1,
+          name: "서울",
+          order: 1
+        },
+        {
+          id: 2,
+          name: "부산",
+          order: 2
+        },
+        {
+          id: 3,
+          name: "대구",
+          order: 3
+        },
+      ];
+      this.transferOptions = [
+        {
+          id: 1,
+          name: "서울",
+          order: 1
+        },
+        {
+          id: 2,
+          name: "부산",
+          order: 2
+        },
+        {
+          id: 3,
+          name: "대구",
+          order: 3
+        },
+        {
+          id: 4,
+          name: "인천",
+          order: 1
+        },
+        {
+          id: 5,
+          name: "고양",
+          order: 2
+        },
+        {
+          id: 6,
+          name: "광주",
+          order: 3
+        },
+        {
+          id: 7,
+          name: "경기도",
+          order: 1
+        },
+        {
+          id: 8,
+          name: "충청도",
+          order: 2
+        },
+        {
+          id: 9,
+          name: "경상도",
+          order: 3
+        },
+      ]
+      
+      this.treeOptions = [
+        {
+          id: 1,
+          name: "서울",
+          order: 1,
+          children: [
+            {
+              id: 11,
+              name: "강서구",
+              order: 1,
+              children: [
+                {
+                  id: 111,
+                  name: "화곡동",
+                  order: 1,
+                }
+              ]
+            },
+            {
+              id: 12,
+              name: "강남구",
+              order: 1,
+            }
+          ]
+        },
+        {
+          id: 2,
+          name: "부산",
+          order: 2,
+          children: [
+            {
+              id: 21,
+              name: "중구",
+              order: 1,
+            },
+            {
+              id: 22,
+              name: "연제구",
+              order: 1,
+            }
+          ]
+        },
+        {
+          id: 3,
+          name: "대구",
+          order: 3,
+          children: [
+            {
+              id: 31,
+              name: "서구",
+              order: 1,
+            },
+            {
+              id: 32,
+              name: "중구",
+              order: 1,
+            }
+          ]
+        },
+      ];
+      this.selectCascadeOptions = this.$_.cloneDeep(this.treeOptions);
     }
   }
 });
